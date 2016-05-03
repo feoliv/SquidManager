@@ -241,7 +241,7 @@ function install_sarg(){
 	else
 		echo "Sarg already installed!"
 	fi
-	
+
 }
 #________________________________________________________________________________________________________________________
 
@@ -287,31 +287,62 @@ function removal(){
 
 function remove_squid(){
 
-	removal_logs=`apt-get -y remove squid &>/dev/null`;
-
-	if [ $? -eq 0 ]
+	if [ $is_installed_squid -eq 0 ]
 		then
-		echo "Squid successffully removed!"
+		`apt-get -y remove squid &>/dev/null`;
+
+		check_intallation;
+
+		if [ $is_installed_squid -eq 1 ]
+			then
+			echo "Squid successffully removed!"
+		else
+			echo "Squid wasn't correctly Removed!"
+		fi
+
+	else
+		echo "Squid wasn't installed!"
 	fi
+
 }
 
 function remove_squid_guard(){
 
-	removal_logs=`apt-get -y remove squid_guard &>/dev/null`;
-
-	if [ $? -eq 0 ]
+	if [ $is_installed_squid_guard -eq 0 ]
 		then
-		echo "Squid Guard successffully removed!"
+		`apt-get -y remove squid_guard &>/dev/null`;
+
+		check_intallation;
+
+		if [ $is_installed_squid_guard -eq 1 ]
+			then
+			echo "Squid Guard successffully removed!"
+		else
+			echo "Squid Guard wasn't correctly Removed!"
+		fi
+
+	else
+		echo "Squid Guard wasn't installed!"
 	fi
 }
 
 function remove_sarg(){
 
-	removal_logs=`apt-get -y remove sarg &>/dev/null`;
-
-	if [ $? -eq 0 ]
+	if [ $is_installed_sarg -eq 0 ]
 		then
-		echo "Sarg successffully removed!"
+		`apt-get -y remove sarg &>/dev/null`;
+
+		check_intallation;
+
+		if [ $is_installed_sarg -eq 1 ]
+			then
+			echo "Sarg successffully removed!"
+		else
+			echo "Sarg wasn't correctly Removed!"
+		fi
+
+	else
+		echo "Sarg wasn't installed!"
 	fi
 }
 #________________________________________________________________________________________________________________________
