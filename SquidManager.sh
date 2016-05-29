@@ -111,13 +111,16 @@ function home(){
 
 	while [[ true ]]; do
 		welcome_screen
+		check_intallation;
 		read option;
 		case $option in
 			1 ) installation_express;
+				installation_process;
+
 				;;
 			2 ) installation_personalized;
 				;;
-			3 ) echo "";
+			3 ) echo "oi";
 				;;
 			4 ) exit;
 				;;
