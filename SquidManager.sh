@@ -250,7 +250,31 @@ function install_sarg(){
 
 #-------------------------------------------------Configuration Section------------------------------------------------
 function configure_squid(){
-echo "";
+
+	#Creating a backup for the default configuration file.
+	`mv /etc/squid/squid.conf /etc/squid/squid.conf.bkp`;
+	#Creating new file with the actual configuration
+	`touch /etc/squid/squid.conf`;
+	#Creating empty file that reffers to the list of blocked sites
+	`touch /etc/squid/blocked_sites`;
+	#Creating empty file that reffers to the list of blocked terms
+	`touch /etc/squid/bloked_terms`;
+
+	#Introducing the simple content into the file
+	`/etc/squid/squid.conf << cat <<EOF
+	http_port 3128
+	visible_hostname ifsp
+
+	acl all src 0.0.0.0/0.0.0.0
+	acl blocked_sites url_regex -i "/etc/squid/blocked_sites"
+	acl blocked_terms dstdom_regex "/etc/squid/blocked_terms"
+
+	http_access deny sites_bloqueados
+	http_access deny termos_bloqueados
+	http_access allow all
+
+EOF`
+	
 }
 
 function configure_squid_guard(){
