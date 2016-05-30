@@ -4,7 +4,7 @@
 
 #Check if package is installed variables
 is_installed_squid=1000;
-is_installed_sarg=1000;
+is_installed_squidguard=1000;
 is_installed_sarg=1000;
 #Packges to be installed
 package_tobe_installed[0]=0;
@@ -65,7 +65,7 @@ function welcome_screen(){
 function installation_express(){
 	clear;
 	package_tobe_installed[0]="squid";
-	package_tobe_installed[1]="squid_guard";
+	package_tobe_installed[1]="squidguard";
 	package_tobe_installed[2]="sarg";
 }
 
@@ -86,7 +86,7 @@ function installation_personalized(){
 	read answer;
 	if [ $answer == "y" ]
 		then
-		package_tobe_installed[1]="squid_guard";
+		package_tobe_installed[1]="squidguard";
 	else
 		package_tobe_installed[1]="";
 	fi
@@ -141,9 +141,9 @@ function installation_process(){
 						configure_squid;
 					;;
 
-			"squid_guard" ) 
-						install_squid_guard;
-						configure_squid_guard;
+			"squidguard" ) 
+						install_squidguard;
+						configure_squidguard;
 					;;
 
 			"sarg" ) 
@@ -169,11 +169,11 @@ function installation(){
 	else
 		is_installed_squid;
 	fi
-	if [ $is_installed_squid_guard -eq 0 ] 
+	if [ $is_installed_squidguard -eq 0 ] 
 		then
 		echo "Squid Guard already installed!";
 	else
-		install_squid_guard;
+		install_squidguard;
 	fi
 	if [ $is_installed_sarg -eq 0 ]
 		then
@@ -205,15 +205,15 @@ function install_squid(){
 
 }
 
-function install_squid_guard(){
+function install_squidguard(){
 
-	if [ $is_installed_squid_guard -eq 1 ]
+	if [ $is_installed_squidguard -eq 1 ]
 		then
-		`apt-get -y install squid_guard &>/dev/null`;
+		`apt-get -y install squidguard &>/dev/null`;
 
 		check_intallation;
 
-		if [ $is_installed_squid_guard -eq 0 ]
+		if [ $is_installed_squidguard -eq 0 ]
 			then
 			echo "Squid Guard successffully installed!"
 		else
@@ -277,7 +277,7 @@ EOF`
 	
 }
 
-function configure_squid_guard(){
+function configure_squidguard(){
 echo "";
 }
 
@@ -289,16 +289,16 @@ function check_intallation(){
 
 	#If it is not found returns 1
 	#Check if Squid is already installed
-	`dpkg -l squid &>/dev/null`;
-	$is_installed_squid=$?;
+	`hash squid 2>/dev/null`;
+	is_installed_squid=$?;
 	
 	#Check if Squid Guard is already installed
-	`dpkg -l squid_guard &>/dev/null`;
-	$is_installed_squid_guard=$?;
+	`hash squidguard 2>/dev/null`;
+	is_installed_squidguard=$?;
 
 	#Check if Sarg is already installed
-	`dpkg -l sarg &>/dev/null`;
-	$is_installed_sarg=$?;
+	`hash sarg 2>/dev/null`;
+	is_installed_sarg=$?;
 
 }
 #________________________________________________________________________________________________________________________
@@ -333,15 +333,15 @@ function remove_squid(){
 
 }
 
-function remove_squid_guard(){
+function remove_squidguard(){
 
-	if [ $is_installed_squid_guard -eq 0 ]
+	if [ $is_installed_squidguard -eq 0 ]
 		then
-		`apt-get -y remove squid_guard &>/dev/null`;
+		`apt-get -y remove squidguard &>/dev/null`;
 
 		check_intallation;
 
-		if [ $is_installed_squid_guard -eq 1 ]
+		if [ $is_installed_squidguard -eq 1 ]
 			then
 			echo "Squid Guard successffully removed!"
 		else
