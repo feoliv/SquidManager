@@ -61,6 +61,7 @@ function welcome_screen(){
 	echo "3 - Personalized Installation";
 	echo "4 - Administration";
 	echo "5 - Exit";
+	echo "choice:";
 }
 
 function installation_express(){
@@ -101,7 +102,6 @@ function installation_personalized(){
 		package_tobe_installed[2]="";
 	fi
 
-	echo "${package_tobe_installed[0]},${package_tobe_installed[1]},${package_tobe_installed[2]}";
 	
 }
 
@@ -115,11 +115,10 @@ function home(){
 		check_intallation;
 		read option;
 		case $option in
-			1 ) installation_express;
+			1 ) 	installation_express;
 				installation_process;
-
 				;;
-			2 ) installation_personalized;
+			2 ) removal_express;
 				;;
 			3 ) echo "oi";
 				;;
@@ -131,13 +130,14 @@ function home(){
 }
 
 function installation_process(){
-
+	
+	echo "Installing softwares:";
 	#iterates on the softwares that need to be installed
 	for software in ${package_tobe_installed[@]}; do
 		
 		#Check which software is going to be installed
 		case ${software} in
-			"squid" ) 	
+			"squid" ) 		
 						install_squid;
 						configure_squid;
 					;;
@@ -186,7 +186,8 @@ function installation(){
 }
 
 function install_squid(){
-
+	
+	echo "Installing Squid...";
 	if [ $is_installed_squid -eq 1 ]
 		then
 		`apt-get -y install squid &>/dev/null`;
@@ -208,6 +209,7 @@ function install_squid(){
 
 function install_squidguard(){
 
+	echo "Installing Squid Guard...";
 	if [ $is_installed_squidguard -eq 1 ]
 		then
 		`apt-get -y install squidguard &>/dev/null`;
@@ -229,6 +231,7 @@ function install_squidguard(){
 
 function install_sarg(){
 
+	echo "Installing Sarg...";
 	if [ $is_installed_sarg -eq 1 ]
 		then
 		`apt-get -y install sarg &>/dev/null`;
@@ -251,7 +254,8 @@ function install_sarg(){
 
 #-------------------------------------------------Configuration Section------------------------------------------------
 function configure_squid(){
-
+	
+	echo "Configuring Squid..."
 	#Creating a backup for the default configuration file.
 	`mv /etc/squid/squid.conf /etc/squid/squid.conf.bkp`;
 	#Creating new file with the actual configuration
@@ -280,7 +284,17 @@ EOM`;
 }
 
 function configure_squidguard(){
-echo "";
+
+	#Download blacklists
+	`wget -P /tmp/ -c  http://squidguard.mesd.k12.or.us/blacklists.tgz`;
+	#Unpacking blacklists
+	`tar -xzf /tmp/blacklists.tgz -C /var/lib/squidguard/db/`;
+	#Compiling lists
+	`squidGuard -C all`;
+	#Setting up the permissions
+	`chown -R proxy:proxy /var/lib/squidguard/db/*;
+	find /var/lib/squidguard/db -type f | xargs chmod 644;
+	find /var/lib/squidguard/db -type d | xargs chmod 755;`
 }
 
 function configure_sarg(){
@@ -311,15 +325,31 @@ function check_intallation(){
 
 #-------------------------------------------------Removal Section------------------------------------------------
 
-function removal(){
-	echo "";
-	#Confirmação Dupla
-	#Remover Tudo
-	#Erro se não estiver instalado
+function removal_express(){
+
+	echo "Do you wish to remove all the these products: Squid, Squid Guard and Sarg? [y/n]";
+	read answer;
+	if [ $answer == "y" ]
+		then
+		echo "Do you REALLY wish to REMOVE ALL the these products: Squid, Squid Guard and Sarg? [y/n]";
+		read answer;
+		if [ $answer == "y" ]
+			then
+			remove_squid;
+			remove_squidguard;
+			remove_sarg;		
+		else
+			echo "Removal cancelled!";
+		fi
+
+		echo "";		
+	else
+		echo "Removal cancelled!";
+	fi
 }
 
 function remove_squid(){
-
+	echo "Removing Squid...";
 	if [ $is_installed_squid -eq 0 ]
 		then
 		`apt-get -y remove squid &>/dev/null`;
@@ -340,7 +370,8 @@ function remove_squid(){
 }
 
 function remove_squidguard(){
-
+	
+	echo "Removing Squid Guard...";
 	if [ $is_installed_squidguard -eq 0 ]
 		then
 		`apt-get -y remove squidguard &>/dev/null`;
@@ -360,7 +391,8 @@ function remove_squidguard(){
 }
 
 function remove_sarg(){
-
+	
+	echo "Removing Sarg...";	
 	if [ $is_installed_sarg -eq 0 ]
 		then
 		`apt-get -y remove sarg &>/dev/null`;
