@@ -57,9 +57,10 @@ echo "";
 function welcome_screen(){
 	
 	echo "1 - Express Installation";
-	echo "2 - Personalized Installation";
-	echo "3 - Administration";
-	echo "4 - Exit";
+	echo "2 - Express Removal";
+	echo "3 - Personalized Installation";
+	echo "4 - Administration";
+	echo "5 - Exit";
 }
 
 function installation_express(){
@@ -261,7 +262,9 @@ function configure_squid(){
 	`touch /etc/squid/bloked_terms`;
 
 	#Introducing the simple content into the file
-	`/etc/squid/squid.conf << cat <<EOF
+	FILE="/etc/squid/squid.conf";
+
+	`/bin/cat <<EOM >$FILE
 	http_port 3128
 	visible_hostname ifsp
 
@@ -272,8 +275,7 @@ function configure_squid(){
 	http_access deny sites_bloqueados
 	http_access deny termos_bloqueados
 	http_access allow all
-
-EOF`
+EOM`;
 	
 }
 
@@ -293,8 +295,12 @@ function check_intallation(){
 	is_installed_squid=$?;
 	
 	#Check if Squid Guard is already installed
-	`hash squidguard 2>/dev/null`;
-	is_installed_squidguard=$?;
+	if [ -d /usr/lib/squidguard ]
+	then
+	is_installed_squidguard=0;
+	else
+	is_installed_squidguard=1;
+	fi
 
 	#Check if Sarg is already installed
 	`hash sarg 2>/dev/null`;
