@@ -29,10 +29,12 @@ echo "";
 
 #-------------------------------------------------Administration Section------------------------------------------------
 function stop_proxy(){
+`/etc/init.d/squid stop`;
 echo "";
 }
 
 function start_proxy(){
+`/etc/init.d/squid start`;
 echo "";
 }
 
@@ -45,6 +47,7 @@ echo "";
 }
 
 function add_exception(){
+#sed /site/d arquivo > arquivo 
 echo "";
 }
 
