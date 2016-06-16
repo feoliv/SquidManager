@@ -29,13 +29,13 @@ echo "";
 
 #-------------------------------------------------Administration Section------------------------------------------------
 function stop_proxy(){
+#Stopping squid service
 `/etc/init.d/squid stop`;
-echo "";
 }
 
 function start_proxy(){
+#Starting squid service
 `/etc/init.d/squid start`;
-echo "";
 }
 
 function add_user(){
@@ -69,15 +69,15 @@ function welcome_screen(){
 
 function installation_express(){
 	clear;
-	package_tobe_installed[0]="squid";
-	package_tobe_installed[1]="squidguard";
-	package_tobe_installed[2]="sarg";
+	installation;
 }
 
 function installation_personalized(){
-
+	
+	#Clear the screen
 	clear;
-
+	
+	#Verifying if Squid installation is required
 	echo "Do you wish to install Squid? [y/n]";
 	read answer;
 	if [ $answer == "y" ]
@@ -86,7 +86,8 @@ function installation_personalized(){
 	else
 		package_tobe_installed[0]="";
 	fi
-
+	
+	#Verifying if the Squid Guard installation is required
 	echo "Do you wish to install Squid Guard? [y/n]";
 	read answer;
 	if [ $answer == "y" ]
@@ -96,6 +97,7 @@ function installation_personalized(){
 		package_tobe_installed[1]="";
 	fi
 
+	#Verifying if the Sarg installation is required
 	echo "Do you wish to install Sarg? [y/n]";
 	read answer;
 	if [ $answer == "y" ]
@@ -105,6 +107,15 @@ function installation_personalized(){
 		package_tobe_installed[2]="";
 	fi
 
+	#Verifying if the apache installation is required
+        echo "Do you wish to install Apache? [y/n]";
+        read answer;
+        if [ $answer == "y" ]
+                then
+                package_tobe_installed[3]="apache";
+        else
+                package_tobe_installed[3]="";
+        fi
 	
 }
 
@@ -118,8 +129,7 @@ function home(){
 		check_intallation;
 		read option;
 		case $option in
-			1 ) 	installation_express;
-				installation_process;
+			1 ) 	installation;
 				;;
 			2 ) removal_express;
 				;;
@@ -166,25 +176,37 @@ function installation_process(){
 
 function installation(){
 
-
+	#Check if the squid is already intalled, if it isn't it get installed.
 	if [ $is_installed_squid -eq 0 ] 
 		then
 		echo "Squid already installed!";
 	else
 		is_installed_squid;
 	fi
+	
+	#Check if the squid guard is already intalled, if it isn't it get installed.
 	if [ $is_installed_squidguard -eq 0 ] 
 		then
 		echo "Squid Guard already installed!";
 	else
 		install_squidguard;
 	fi
+	
+	#Check if the sarg is already intalled, if it isn't it get installed.
 	if [ $is_installed_sarg -eq 0 ]
 		then
 		echo "Sarg already installed!";
 	else
 		install_sarg;
 	fi
+
+	#Check if the apache is already intalled, if it isn't it get installed.
+	if [ $is_installed_apache -eq 0 ]
+                then
+                echo "Apache already installed!";
+        else
+                install_apache;
+        fi
 
 }
 
@@ -253,6 +275,28 @@ function install_sarg(){
 	fi
 
 }
+
+function install_apache(){
+
+        echo "Installing Apache...";
+        if [ $is_installed_apache -eq 1 ]
+                then
+                `apt-get -y install apache2 &>/dev/null`;
+
+                check_intallation;
+
+                if [ $is_installed_apache -eq 0 ]
+                        then
+                        echo "Apache successffully installed!"
+                else
+                        echo "Apache wasn't correctly installed!"
+                fi
+
+        else
+                echo "Apache already installed!"
+        fi
+
+}
 #________________________________________________________________________________________________________________________
 
 #-------------------------------------------------Configuration Section------------------------------------------------
@@ -304,6 +348,11 @@ function configure_sarg(){
 echo "";
 }
 
+function configure_apache(){
+echo "";
+}
+
+
 function check_intallation(){
 
 	#If it is not found returns 1
@@ -323,6 +372,11 @@ function check_intallation(){
 	`hash sarg 2>/dev/null`;
 	is_installed_sarg=$?;
 
+	#Check if apache is already installed
+        `hash apache2 2>/dev/null`;
+        is_installed_apache=$?;
+
+
 }
 #________________________________________________________________________________________________________________________
 
@@ -340,7 +394,8 @@ function removal_express(){
 			then
 			remove_squid;
 			remove_squidguard;
-			remove_sarg;		
+			remove_sarg;
+			remove_apache;		
 		else
 			echo "Removal cancelled!";
 		fi
@@ -413,6 +468,28 @@ function remove_sarg(){
 		echo "Sarg wasn't installed!"
 	fi
 }
+
+function remove_apache(){
+
+        echo "Removing Apache...";
+        if [ $is_installed_sarg -eq 0 ]
+                then
+                `apt-get -y remove sarg &>/dev/null`;
+
+                check_intallation;
+
+                if [ $is_installed_sarg -eq 1 ]
+                        then
+                        echo "Apache successffully removed!"
+                else
+                        echo "Apache wasn't correctly Removed!"
+                fi
+
+        else
+                echo "Apache wasn't installed!"
+        fi
+}
+
 #________________________________________________________________________________________________________________________
 
 
