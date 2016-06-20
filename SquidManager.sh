@@ -6,6 +6,7 @@
 is_installed_squid=1000;
 is_installed_squidguard=1000;
 is_installed_sarg=1000;
+is_installed_apache=1000;
 #Packges to be installed
 package_tobe_installed[0]=0;
 
@@ -28,48 +29,155 @@ echo "";
 #________________________________________________________________________________________________________________________
 
 #-------------------------------------------------Administration Section------------------------------------------------
-function stop_proxy(){
-#Stopping squid service
-`/etc/init.d/squid stop`;
+function stop_service(){
+
+ 	#Stopping squid service
+	 `/etc/init.d/squid stop &>>/dev/null`;
+  	
+	#Verifying if the action was correctly applyed
+  	if [ $? -eq 0 ]
+     	then
+     		echo "Service sucessfully stopped";
+     	else
+        	echo "Error while trying to stop the service!";
+  	fi
+
 }
 
-function start_proxy(){
-#Starting squid service
-`/etc/init.d/squid start`;
+function start_service(){
+
+	#Starting squid service
+	`/etc/init.d/squid start &>>/dev/null`;
+	
+	#Verifying if the action was correctly applyed
+        if [ $? -eq 0 ]
+        then
+                echo "Service sucessfully started";
+        else
+                echo "Error while trying to start the service!";
+        fi
+
 }
 
 function add_user(){
-echo "";
+	
+	#Receiving the user username
+	user=$1;
+	passwd=$2;	
+	
+	#Checking if it already exists
+
+	#Executing creation command
+	`htpasswd -b /etc/squid/users $user $passwd &>>/dev/null`;
+
+	#Verifying if the action was correctly applyed
+	if [ $? -eq 0 ]
+           then
+                 echo "User successfully added!";
+           else
+                 echo "Error while trying to add the user!";
+        fi
+
 }
 
 function remove_user(){
-echo "";
+	
+	#Receiving the user username
+        user=$1;
+
+        #Executing removal command
+	`htpasswd -D /etc/squid/users $user &>>/dev/null`;
+	
+	#Verifying if the action was correctly applyed
+	if [ $? -eq 0 ]
+           then
+          	 echo "User successfully removed!";
+           else
+            	 echo "Error while trying to remove the user!";
+        fi
+
 }
 
-function add_exception(){
-#sed /site/d arquivo > arquivo 
-echo "";
+function reset_password(){
+
+	#Receiving the user username
+        user=$1;
+        passwd=$2;
+
+        #Checking if it already exists
+
+        #Executing creation command
+        `htpasswd -b /etc/squid/users $user $passwd &>>/dev/null`;
+
+        #Verifying if the action was correctly applyed
+        if [ $? -eq 0 ]
+           then
+                 echo "Password successfully changed";
+           else
+                 echo "Error while trying to reset password!";
+        fi
+	
 }
 
-function remove_exception(){
-echo "";
+function add_exception_site(){
+
+	site=$1;
+	#Adding site as execption
+	`echo $site >> /var/lib/squidguard/db/blacklists/white/urls`;	
+
+	#Verifying if the action was correctly applyed
+        if [ $? -eq 0 ]
+           then
+                 echo "Exception successfully added!";
+           else
+                 echo "Error while trying to add exception!";
+        fi
+	
+}
+
+function remove_exception_site(){
+	
+	site=$1;
+	#Adding site as execption
+	`sed /$site/d /var/lib/squidguard/db/blacklists/white/urls > /var/lib/squidguard/db/blacklists/white/urls`;
+	
+	#Verifying if the action was correctly applyed
+        if [ $? -eq 0 ]
+           then
+                 echo "Exception successfully removed!";
+           else
+                 echo "Error while trying to remove the exception!";
+        fi
+
 }
 #________________________________________________________________________________________________________________________
 
 #-------------------------------------------------Screen Section------------------------------------------------
 function welcome_screen(){
 	
+	echo "Welcome to Squid Manager";	
 	echo "1 - Express Installation";
-	echo "2 - Express Removal";
-	echo "3 - Personalized Installation";
-	echo "4 - Administration";
-	echo "5 - Exit";
+	echo "2 - Personalized Installation";
+	echo "3 - Express Removal";
+	echo "4 - Personalized Removal";
+	echo "5 - Administration";
+	echo "6 - Start Service";
+	echo "7 - Stop Service";
+	echo "8 - Exit";
 	echo "choice:";
 }
 
-function installation_express(){
-	clear;
-	installation;
+function administration_screen(){
+
+	echo "Administration - Squid Manager";	
+	echo "1 - User add";
+        echo "2 - User remove";
+        echo "3 - User reset password";
+        echo "4 - Add proxy exception";
+        echo "5 - Remove proxy exception";
+	echo "6 - Exit";
+        echo "choice:";
+	
 }
 
 function installation_personalized(){
@@ -116,7 +224,7 @@ function installation_personalized(){
         else
                 package_tobe_installed[3]="";
         fi
-	
+
 }
 
 #________________________________________________________________________________________________________________________
@@ -131,15 +239,73 @@ function home(){
 		case $option in
 			1 ) 	installation;
 				;;
-			2 ) removal_express;
+			2 ) 	installation_personalized;
+                                ;;
+			3 )	removal_express;
 				;;
-			3 ) echo "oi";
+			4 ) 	removal_personalized;
 				;;
-			4 ) exit;
+			5 )  	administration;
 				;;
+			6 )     start_service;
+                                ;;
+			7 )     stop_service;
+                                ;;
+			8 )     exit;
+                                ;;
 		esac
 	done
 	
+}
+
+function administration(){
+
+        while [[ true ]]; do
+                administration_screen
+                read option; 
+                case $option in 
+                        1 )     
+				echo "--- User creation ---"; 
+				echo "Please, inform the username:";
+				read user;
+				echo "Please, inform the password:";
+				read passwd;
+				add_user $user $passwd;
+
+                                ;;
+                        2 )     
+				echo "--- User Removal ---"; 
+                                echo "Please, inform the username:";
+                                read user;
+                                remove_user $user;
+
+                                ;;
+                        3 )     
+				echo "--- Password Reset ---";
+				echo "Please, inform the username:";
+                                read user;
+                                echo "Please, inform the password:";
+                                read passwd;
+				password_reset $user $password;
+
+                                ;;
+                        4 )     
+				echo "--- Add Exception ---";
+                                echo "Please, inform the exception you want to add:";
+                                read site;
+				add_exception_site $site;
+                                ;;
+                        5 )     
+				echo "--- Remove Exception ---";
+                                echo "Please, inform the exception you want to remove:";
+                                read site;
+                                remove_exception_site $site;
+                                ;;
+                        6 )     exit;
+                                ;;
+                esac
+        done
+ 
 }
 
 function installation_process(){
@@ -164,6 +330,10 @@ function installation_process(){
 						install_sarg;
 						configure_sarg;
 					;;
+			"apache" )
+                                                install_apache;
+                                                configure_apache;
+                                        ;;
 		esac
 
 	done
@@ -181,7 +351,8 @@ function installation(){
 		then
 		echo "Squid already installed!";
 	else
-		is_installed_squid;
+		install_squid;
+		configure_squid;
 	fi
 	
 	#Check if the squid guard is already intalled, if it isn't it get installed.
@@ -190,6 +361,7 @@ function installation(){
 		echo "Squid Guard already installed!";
 	else
 		install_squidguard;
+		configure_squidguard;
 	fi
 	
 	#Check if the sarg is already intalled, if it isn't it get installed.
@@ -198,6 +370,7 @@ function installation(){
 		echo "Sarg already installed!";
 	else
 		install_sarg;
+		configure_sarg;
 	fi
 
 	#Check if the apache is already intalled, if it isn't it get installed.
@@ -206,6 +379,7 @@ function installation(){
                 echo "Apache already installed!";
         else
                 install_apache;
+		configure_apache;
         fi
 
 }
@@ -281,7 +455,7 @@ function install_apache(){
         echo "Installing Apache...";
         if [ $is_installed_apache -eq 1 ]
                 then
-                `apt-get -y install apache2 &>/dev/null`;
+                `apt-get -y install apache2 apache2-utils &>/dev/null`;
 
                 check_intallation;
 
@@ -297,6 +471,7 @@ function install_apache(){
         fi
 
 }
+
 #________________________________________________________________________________________________________________________
 
 #-------------------------------------------------Configuration Section------------------------------------------------
@@ -316,22 +491,79 @@ function configure_squid(){
 	FILE="/etc/squid/squid.conf";
 
 	`/bin/cat <<EOM >$FILE
-	http_port 3128
-	visible_hostname ifsp
+        http_port 3128
+        visible_hostname ifsp
 
-	acl all src 0.0.0.0/0.0.0.0
-	acl blocked_sites url_regex -i "/etc/squid/blocked_sites"
-	acl blocked_terms dstdom_regex "/etc/squid/blocked_terms"
+        #Authentication
+        auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/users
+        acl password proxy_auth REQUIRED
+        http_access allow password
 
-	http_access deny sites_bloqueados
-	http_access deny termos_bloqueados
-	http_access allow all
+        #SquidGuard
+        redirect_program /usr/lib/squidGuard
+
+        acl all src 0.0.0.0/0.0.0.0
+        acl blocked_sites url_regex -i "/etc/squid/blocked_sites"
+        acl blocked_terms dstdom_regex "/etc/squid/blocked_terms"
+
+        http_access deny blocked_sites
+        http_access deny blocked_terms
+        http_access allow all
+
 EOM`;
 	
 }
 
 function configure_squidguard(){
 
+	echo "Configuring SquidGuard..."
+        #Creating a backup for the default configuration file.
+        `mv /etc/squidguard/squidGuard.conf /etc/squidguard/squidGuard.conf.bkp`;
+        #Creating new file with the actual configuration
+        `touch /etc/squidguard/squidGuard.conf`;
+
+	FILE="/etc/squidguard/squidGuard.conf";
+	`/bin/cat <<EOM >$FILE
+
+#SquidManager Default Configuration
+dbhome /var/lib/squidguard/db/blacklists/
+logdir /var/log/squidguard/
+
+src users {
+       	users root
+       	}
+
+dest audio_video {
+        domainlist audio-video/domains
+        urllist audio-video/urls
+        }
+
+dest proxy {
+        domainlist proxy/domains
+        urllist proxy/urls
+        }
+	
+dest white {
+        domainlist white/domains
+        urllist white/urls
+        }
+
+acl {
+        users   {
+       	        pass !audio-video all
+               	redirect http://www.pudim.com.br
+                }
+
+        default {
+       	        pass white !audio-video !proxy all
+               	redirect http://www.pudim.com.br
+         	}
+        }
+EOM`;
+	#Creation WhiteList
+	`mkdir /var/lib/squidguard/db/blacklists/white`;	
+	`touch /var/lib/squidguard/db/blacklists/domains`;
+	`touch /var/lib/squidguard/db/blacklists/urls`;
 	#Download blacklists
 	`wget -P /tmp/ -c  http://squidguard.mesd.k12.or.us/blacklists.tgz`;
 	#Unpacking blacklists
@@ -342,6 +574,7 @@ function configure_squidguard(){
 	`chown -R proxy:proxy /var/lib/squidguard/db/*;
 	find /var/lib/squidguard/db -type f | xargs chmod 644;
 	find /var/lib/squidguard/db -type d | xargs chmod 755;`
+
 }
 
 function configure_sarg(){
@@ -349,7 +582,11 @@ echo "";
 }
 
 function configure_apache(){
-echo "";
+	
+	echo "Configuring Apache...";
+	#Create the file where the proxy users will be stored
+	`touch /etc/squid/users`;
+		
 }
 
 
@@ -375,7 +612,6 @@ function check_intallation(){
 	#Check if apache is already installed
         `hash apache2 2>/dev/null`;
         is_installed_apache=$?;
-
 
 }
 #________________________________________________________________________________________________________________________
@@ -410,7 +646,7 @@ function remove_squid(){
 	echo "Removing Squid...";
 	if [ $is_installed_squid -eq 0 ]
 		then
-		`apt-get -y remove squid &>/dev/null`;
+		`apt-get -y remove squid &>/dev/null;apt -y autoremove &>/dev/null`;
 
 		check_intallation;
 
@@ -432,7 +668,7 @@ function remove_squidguard(){
 	echo "Removing Squid Guard...";
 	if [ $is_installed_squidguard -eq 0 ]
 		then
-		`apt-get -y remove squidguard &>/dev/null`;
+		`apt-get -y remove squidguard &>/dev/null; apt -y autoremove &>/dev/null`;
 
 		check_intallation;
 
@@ -453,7 +689,7 @@ function remove_sarg(){
 	echo "Removing Sarg...";	
 	if [ $is_installed_sarg -eq 0 ]
 		then
-		`apt-get -y remove sarg &>/dev/null`;
+		`apt-get -y remove sarg &>/dev/null; apt -y autoremove &>/dev/null`;
 
 		check_intallation;
 
@@ -472,13 +708,13 @@ function remove_sarg(){
 function remove_apache(){
 
         echo "Removing Apache...";
-        if [ $is_installed_sarg -eq 0 ]
+        if [ $is_installed_apache -eq 0 ]
                 then
-                `apt-get -y remove sarg &>/dev/null`;
+                `apt-get -y remove apache* apache2-utils &>/dev/null;apt -y autoremove &>/dev/null`;
 
                 check_intallation;
 
-                if [ $is_installed_sarg -eq 1 ]
+                if [ $is_installed_apache -eq 1 ]
                         then
                         echo "Apache successffully removed!"
                 else
