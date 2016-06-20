@@ -47,7 +47,7 @@ function stop_service(){
 function start_service(){
 
 	#Starting squid service
-	`/etc/init.d/squid start &>>/dev/null`;
+	`/etc/init.d/squid start &>>/dev/null; sarg &>>/dev/null`;
 	
 	#Verifying if the action was correctly applyed
         if [ $? -eq 0 ]
@@ -175,7 +175,8 @@ function administration_screen(){
         echo "3 - User reset password";
         echo "4 - Add proxy exception";
         echo "5 - Remove proxy exception";
-	echo "6 - Exit";
+	echo "6 - Back to main";
+	echo "7 - Exit";
         echo "choice:";
 	
 }
@@ -239,11 +240,11 @@ function home(){
 		case $option in
 			1 ) 	installation;
 				;;
-			2 ) 	installation_personalized;
+			2 ) 	echo "Will be implemented in the next version";
                                 ;;
 			3 )	removal_express;
 				;;
-			4 ) 	removal_personalized;
+			4 ) 	echo "Will be implemented in the next version";
 				;;
 			5 )  	administration;
 				;;
@@ -301,7 +302,11 @@ function administration(){
                                 read site;
                                 remove_exception_site $site;
                                 ;;
-                        6 )     exit;
+                       
+			6 )     home;
+                                ;;
+			
+			7 )     exit;
                                 ;;
                 esac
         done
@@ -530,7 +535,7 @@ dbhome /var/lib/squidguard/db/blacklists/
 logdir /var/log/squidguard/
 
 src users {
-       	users root
+       	user root
        	}
 
 dest audio_video {
@@ -560,14 +565,15 @@ acl {
          	}
         }
 EOM`;
+
+	#Download blacklists
+        `wget -P /tmp/ -c  http://squidguard.mesd.k12.or.us/blacklists.tgz`;
+        #Unpacking blacklists
+        `tar -xzf /tmp/blacklists.tgz -C /var/lib/squidguard/db/`;
 	#Creation WhiteList
 	`mkdir /var/lib/squidguard/db/blacklists/white`;	
-	`touch /var/lib/squidguard/db/blacklists/domains`;
-	`touch /var/lib/squidguard/db/blacklists/urls`;
-	#Download blacklists
-	`wget -P /tmp/ -c  http://squidguard.mesd.k12.or.us/blacklists.tgz`;
-	#Unpacking blacklists
-	`tar -xzf /tmp/blacklists.tgz -C /var/lib/squidguard/db/`;
+	`touch /var/lib/squidguard/db/blacklists/white/domains`;
+	`touch /var/lib/squidguard/db/blacklists/white/urls`;
 	#Compiling lists
 	`squidGuard -C all`;
 	#Setting up the permissions
@@ -728,5 +734,5 @@ function remove_apache(){
 
 #________________________________________________________________________________________________________________________
 
-
+clear;
 home
