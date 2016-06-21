@@ -124,7 +124,7 @@ function add_exception_site(){
 	site=$1;
 	#Adding site as execption
 	`echo $site >> /var/lib/squidguard/db/blacklists/white/urls`;	
-
+	`squidGuard -C all`;
 	#Verifying if the action was correctly applyed
         if [ $? -eq 0 ]
            then
@@ -505,15 +505,15 @@ function configure_squid(){
         http_access allow password
 
         #SquidGuard
-        redirect_program /usr/lib/squidGuard
+        redirect_program /usr/lib/squidguard
 
-        acl all src 0.0.0.0/0.0.0.0
-        acl blocked_sites url_regex -i "/etc/squid/blocked_sites"
-        acl blocked_terms dstdom_regex "/etc/squid/blocked_terms"
+        acl all src 0.0.0.0
+        #acl blocked_sites url_regex -i "/etc/squid/blocked_sites"
+        #acl blocked_terms dstdom_regex "/etc/squid/blocked_terms"
 
-        http_access deny blocked_sites
-        http_access deny blocked_terms
-        http_access allow all
+        #http_access deny blocked_sites
+        #http_access deny blocked_terms
+        http_access deny all
 
 EOM`;
 	
@@ -538,7 +538,7 @@ src users {
        	user root
        	}
 
-dest audio_video {
+dest audio-video {
         domainlist audio-video/domains
         urllist audio-video/urls
         }
@@ -584,7 +584,56 @@ EOM`;
 }
 
 function configure_sarg(){
-echo "";
+
+	echo "Configuring Sarg..."
+        #Creating a backup for the default configuration file.
+        `mv /etc/sarg/sarg.conf /etc/sarg/sarg.conf.bkp`;
+        #Creating new file with the actual configuration
+        `touch /etc/sarg/sarg.conf`;
+	`mkdir -p /usr/local/apache2/sarg/relatorio`;
+	FILE="/etc/sarg/sarg.conf";
+        `/bin/cat <<EOM >$FILE
+language English
+access_log /var/log/squid/access.log
+title "Relatorio Diario"
+
+#### INICIO FORMATAÇÃO ####
+
+font_face Arial
+header_color black
+header_bgcolor blanchedalmond
+header_font_size -2
+background_color white
+text_color black
+text_bgcolor white
+title_color black
+
+##### FIM FORMATAÇÃO #########
+
+temporary_dir /tmp
+output_dir /usr/local/apache2/sarg/relatorio
+topuser_sort_field BYTES reverse
+user_sort_field BYTES reverse
+exclude_users /usr/local/sarg/exclude.users
+exclude_hosts /usr/local/sarg/exclude.hosts
+date_format e
+lastlog 0
+remove_temp_files yes
+index yes
+overwrite_report yes
+records_without_userid ignore
+use_comma no
+topsites_num 100
+topsites_sort_order BYTES D
+exclude_codes /usr/local/sarg/exclude_codes
+max_elapsed 28800000
+report_typie topsites users_sites sites_users date_time denied auth_failures site_user_time_date
+long_url no
+exclude_string /usr/local/sarg/exclude.strings
+show_successful_message no
+topuser_fields NUM DATE_TIME USERID CONNECT BYTES %BYTES IN-CACHE-OUT USED_TIME MILISEC %TIME TOTAL AVERAGE 
+EOM`;
+
 }
 
 function configure_apache(){
